@@ -53,26 +53,32 @@ final class Container implements ContainerInterface
     {
         $function = new \ReflectionFunction($closure);
         $parameters = $function->getParameters();
-        $arguments = \array_map(fn ($p) => $this->get(self::keyForParameter($p)), $parameters);
+        $arguments = \array_map($this->valueForParameter(...), $parameters);
         return $closure(...$arguments);
     }
 
-    private static function keyForParameter(\ReflectionParameter $parameter): string
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    private function valueForParameter(\ReflectionParameter $parameter): mixed
     {
-        $attributes = $parameter->getAttributes(Inject::class);
+        $attributes = $parameter->getAttributes(InjectionInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
         switch (\count($attributes)) {
             case 0:
                 $type = $parameter->getType();
                 if ($type instanceof \ReflectionNamedType) {
-                    return $type->getName();
+                    return $this->get($type->getName());
                 }
                 break;
             case 1:
-                return $attributes[0]->newInstance()->id;
+                $attribute = $attributes[0]->newInstance();
+                \assert($attribute instanceof InjectionInterface);
+                return $attribute->resolveValue($this);
             default:
-                throw new DependencyNotFoundException('Unexpect plurality of attributes on parameter ' . $parameter->getName());
+                throw new DependencyNotFoundException('Unexpect plurality of injection attributes on parameter ' . $parameter->getName());
         }
-        throw new DependencyNotFoundException("Could not ascertain dependency key for parameter `{$parameter->getName()}`");
+        throw new DependencyNotFoundException("Could not resolve dependency for parameter `{$parameter->getName()}`");
     }
 
     /**
