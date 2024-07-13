@@ -44,7 +44,7 @@ class ContainerTest extends TestCase
         ];
     }
 
-    public function testExtend()
+    public function testExtend(): void
     {
         $parentContainer = self::makeSampleParentContainer();
         $childContainer = Container::extend($parentContainer, self::makeSampleFactories());
@@ -60,16 +60,16 @@ class ContainerTest extends TestCase
         $childContainer->get('w');
     }
 
-    public function testRun()
+    public function testRunHappyPath(): void
     {
-        $sampleClosure = fn (
-            DummyService $param1,
-            #[Inject('x')] string $param2,
+        $happyClosure = fn(
+            DummyService                      $param1,
+            #[Inject('x')] string             $param2,
             #[DummyCustomInject('hi')] string $param3,
         ) => ['a' => $param1, 'b' => $param2, 'c' => $param3];
 
         $container = Container::from(self::makeSampleFactories());
-        $result = $container->run($sampleClosure);
+        $result = $container->run($happyClosure);
 
         $this->assertIsArray($result);
         $this->assertCount(3, $result);
@@ -79,7 +79,27 @@ class ContainerTest extends TestCase
         $this->assertSame('hi|hi', $result['c']);
     }
 
-    public function testFromAndGet()
+    public function testRunUnhappyPathMultipleInjectionAttributes(): void
+    {
+        $unhappyClosure = fn (
+            DummyService $param1,
+            #[DummyCustomInject('x')] #[DummyCustomInject('y')] string $param2,
+        ) => 'will not reach';
+        $this->expectException(DependencyNotFoundException::class);
+        $this->expectExceptionMessage("Unexpected plurality of injection attributes on parameter param2");
+        $container = Container::from(self::makeSampleFactories());
+        $container->run($unhappyClosure);
+    }
+
+    public function testRunUnhappyPathUnnamedTypeWithNoInjectionAttribute(): void
+    {
+        $unhappyClosure = fn ($param1) => 'will not reach';
+        $this->expectException(DependencyNotFoundException::class);
+        $container = Container::from(self::makeSampleFactories());
+        $container->run($unhappyClosure);
+    }
+
+    public function testFromAndGet(): void
     {
         $container = Container::from(self::makeSampleFactories());
         $this->assertSame('child dummy value for W', $container->get('W'));
@@ -89,9 +109,11 @@ class ContainerTest extends TestCase
         $a = $container->get(DummyService::class);
         $b = $container->get(DummyService::class);
         $this->assertSame($a, $b);
+        $this->expectException(DependencyNotFoundException::class);
+        $container->get('xyz');
     }
 
-    public function testHas()
+    public function testHas(): void
     {
         $container = Container::from(self::makeSampleFactories());
         $this->assertTrue($container->has('W'));

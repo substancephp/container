@@ -76,7 +76,9 @@ final class Container implements ContainerInterface
                 \assert($attribute instanceof InjectionInterface);
                 return $attribute->resolveValue($this, $parameter);
             default:
-                throw new DependencyNotFoundException('Unexpect plurality of injection attributes on parameter ' . $parameter->getName());
+                throw new DependencyNotFoundException(
+                    'Unexpected plurality of injection attributes on parameter ' . $parameter->getName(),
+                );
         }
         throw new DependencyNotFoundException("Could not resolve dependency for parameter `{$parameter->getName()}`");
     }

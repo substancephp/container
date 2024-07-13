@@ -27,7 +27,8 @@
     ],
     "homepage": "https://github.com/substancephp/container",
     "require": {
-      "php": ">=8.3",
+        "php": ">=8.3",
+        "ext-xdebug": "*",
         "psr/container": "^2.0"
     },
     "require-dev": {
@@ -35,9 +36,10 @@
         "phpstan/phpstan": "^1.11"
     },
     "scripts": {
-        "check": ["@test", "@stan"],
+        "check": ["@stan", "@test"],
         "stan": "vendor/bin/phpstan analyse --level=7 src test",
-        "test": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text test"
+        "test": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text test",
+        "serve-coverage-report": "php -S localhost:3000 -t html-coverage"
     },
     "scripts-descriptions": {
       "test": "Run the tests"
