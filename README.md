@@ -11,7 +11,7 @@
 composer require substancephp/container
 ```
 
-## Usage example
+## Usage
 
 ```php
 use Laminas\Diactoros\ServerRequestFactory;
@@ -42,3 +42,7 @@ $container2->run(function(
     // ... do stuff
 });
 ```
+
+Note, after a given dependency has been looked up the first time, it is cached internally within the container,
+and the same instance will be returned again the next time. This behaviour is notably different to that of, say,
+Laravel's service container, which returns a new instance by default on each lookup.
