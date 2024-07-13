@@ -1,5 +1,11 @@
 # Changelog
 
+### v0.2.1
+
+* Add tests
+* Minor grammar correction in exception message
+* Improvements to README
+
 ### v0.2.0
 
 Breaking change:
