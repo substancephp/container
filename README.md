@@ -1,3 +1,7 @@
+# [SubstancePHP](https://github.com/substancephp): [Container](https://packagist.org/packages/substancephp/container)
+
+![CI](https://github.com/substancephp/container/actions/workflows/ci.yml/badge.svg)
+
 ## Overview
 
 `substancephp/container` is a dependency injection package for PHP that offers three core features:
