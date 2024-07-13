@@ -8,6 +8,13 @@
             "SubstancePHP\\Container\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "SubstancePHP\\Container\\": "src/",
+            "Test\\": "test",
+            "TestUtil\\": "testutil"
+        }
+    },
     "authors": [
         {
             "name": "Matthew Harvey",
