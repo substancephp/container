@@ -26,7 +26,7 @@ use SubstancePHP\Container\Inject;
 $container = Container::from([
     Foo::class => fn () => new Foo(),
     Bar::class => fn ($c) => new Bar($c->get(Foo::class)),
-    'ttl-seconds' => 30,
+    'ttl-seconds' => fn () => 30,
 ]);
 
 $request = ServerRequestFactory::fromGlobals();
