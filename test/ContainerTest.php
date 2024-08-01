@@ -63,8 +63,8 @@ class ContainerTest extends TestCase
     public function testRunHappyPath(): void
     {
         $happyClosure = fn(
-            DummyService                      $param1,
-            #[Inject('x')] string             $param2,
+            DummyService $param1,
+            #[Inject('x')] string $param2,
             #[DummyCustomInject('hi')] string $param3,
         ) => ['a' => $param1, 'b' => $param2, 'c' => $param3];
 

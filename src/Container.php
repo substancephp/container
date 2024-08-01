@@ -11,12 +11,12 @@ use Psr\Container\NotFoundExceptionInterface;
 
 final class Container implements ContainerInterface
 {
-    readonly private ?ContainerInterface $parent;
+    private readonly ?ContainerInterface $parent;
 
     /**
      * @var array<string, \Closure(ContainerInterface $c): mixed>
      */
-    readonly private array $factories;
+    private readonly array $factories;
 
     /**
      * @var array<string, mixed> a store of lazily initialized singletons
@@ -26,7 +26,8 @@ final class Container implements ContainerInterface
     /**
      * @param array<string, \Closure(ContainerInterface $c): mixed> $factories
      */
-    private function __construct(?ContainerInterface $parent, array $factories) {
+    private function __construct(?ContainerInterface $parent, array $factories)
+    {
         $this->parent = $parent;
         $this->factories = $factories;
         $this->members = [];
