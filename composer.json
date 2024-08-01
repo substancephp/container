@@ -48,7 +48,6 @@
       "test": "Run the tests",
       "stan": "Run static analysis",
       "cs": "Run PHP_CodeSniffer to detect linting issues",
-      "test": "Run the tests",
       "serve-coverage-report": "Serve an HTML code coverage report",
       "cbf": "Auto-fix linting any issues that can be auto-fixed"
     },
