@@ -106,6 +106,9 @@ final class Container implements ContainerInterface
             }
             $reflectionClass = new \ReflectionClass($id);
             $constructor = $reflectionClass->getMethod('__construct');
+            if (! $constructor->isPublic()) {
+                throw new DependencyNotFoundException();
+            }
             $parameters = $constructor->getParameters();
             $arguments = \array_map($this->valueForParameter(...), $parameters);
             return ($this->members[$id] = $reflectionClass->newInstanceArgs($arguments));
