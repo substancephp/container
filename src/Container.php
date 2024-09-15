@@ -102,18 +102,24 @@ final class Container implements ContainerInterface
         }
         try {
             if (! \class_exists($id)) {
-                throw new DependencyNotFoundException();
+                throw new DependencyNotFoundException("Not a class name: $id");
             }
             $reflectionClass = new \ReflectionClass($id);
-            $constructor = $reflectionClass->getMethod('__construct');
-            if (! $constructor->isPublic()) {
-                throw new DependencyNotFoundException();
+            if (! $reflectionClass->isInstantiable()) {
+                throw new DependencyNotFoundException("Not instantiable: $id");
+            }
+            $constructor = $reflectionClass->getConstructor();
+            if ($constructor !== null && ! $constructor->isPublic()) {
+                throw new DependencyNotFoundException("Constructor not accessible: $id");
+            }
+            if ($constructor === null) {
+                return $reflectionClass->newInstance();
             }
             $parameters = $constructor->getParameters();
             $arguments = \array_map($this->valueForParameter(...), $parameters);
             return ($this->members[$id] = $reflectionClass->newInstanceArgs($arguments));
-        } catch (\ReflectionException) {
-            throw new DependencyNotFoundException();
+        } catch (\ReflectionException $e) {
+            throw new DependencyNotFoundException($e->getMessage(), $e->getCode(), $e);
         }
     }
 

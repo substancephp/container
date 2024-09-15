@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.3.2
+
+* Fix autowiring
+
 ### v0.3.1
 
 * Constructors not autowired unless public
