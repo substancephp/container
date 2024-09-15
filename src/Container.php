@@ -97,20 +97,30 @@ final class Container implements ContainerInterface
             $factory = $this->factories[$id];
             return ($this->members[$id] = $factory($this));
         }
-        if ($this->parent === null) {
-            throw new DependencyNotFoundException("Dependency `{$id}` not found");
+        if ($this->parent !== null && $this->parent->has($id)) {
+            return $this->parent->get($id);
         }
-        return $this->parent->get($id);
+        try {
+            if (! \class_exists($id)) {
+                throw new DependencyNotFoundException();
+            }
+            $reflectionClass = new \ReflectionClass($id);
+            $constructor = $reflectionClass->getMethod('__construct');
+            $parameters = $constructor->getParameters();
+            $arguments = \array_map($this->valueForParameter(...), $parameters);
+            return ($this->members[$id] = $reflectionClass->newInstanceArgs($arguments));
+        } catch (\ReflectionException) {
+            throw new DependencyNotFoundException();
+        }
     }
 
     public function has(string $id): bool
     {
-        if (\array_key_exists($id, $this->factories)) {
+        try {
+            $_ = $this->get($id);
             return true;
-        }
-        if ($this->parent === null) {
+        } catch (ContainerExceptionInterface | NotFoundExceptionInterface) {
             return false;
         }
-        return $this->parent->has($id);
     }
 }

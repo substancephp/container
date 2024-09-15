@@ -11,6 +11,7 @@ use SubstancePHP\Container\Exception\DependencyNotFoundException;
 use SubstancePHP\Container\Inject;
 use TestUtil\Fixtures\DummyCustomInject;
 use TestUtil\Fixtures\DummyService;
+use TestUtil\Fixtures\DummyServiceB;
 
 class ContainerTest extends TestCase
 {
@@ -111,6 +112,23 @@ class ContainerTest extends TestCase
         $this->assertSame($a, $b);
         $this->expectException(DependencyNotFoundException::class);
         $container->get('xyz');
+    }
+
+    public function testAutowiring(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->assertSame('child dummy value for W', $container->get('W'));
+        $this->assertInstanceOf(DummyService::class, $container->get(DummyService::class));
+        $this->assertSame('Max', $container->get(DummyService::class)->name);
+
+        $b = $container->get(DummyServiceB::class);
+        $this->assertInstanceOf(DummyServiceB::class, $b);
+
+        $b2 = $container->get(DummyServiceB::class);
+        $this->assertSame($b2, $b);
+
+        $this->expectException(DependencyNotFoundException::class);
+        $_ = $container->get('No\\Such\\Class');
     }
 
     public function testHas(): void
