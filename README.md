@@ -7,8 +7,8 @@
 `substancephp/container` is a dependency injection package for PHP that offers the following core features:
 * A container class that implements the [PSR-11 container interface](https://www.php-fig.org/psr/psr-11/)
 * A container inheritance mechanism
-* Automatic parameter injection into closures, using either type hinting or attributes
-* The option of either autowiring, or manually defining factory callbacks
+* The option of either autowiring constructor calls, or else manually defining factory callbacks
+* Automatic parameter injection into any closure, using either type hinting or attributes
 
 ## Installation
 

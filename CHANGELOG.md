@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.3.0
+
+* Introduce autowiring
+
 ### v0.2.1
 
 * Add tests
