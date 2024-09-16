@@ -68,8 +68,11 @@ final class Container implements ContainerInterface
         switch (\count($attributes)) {
             case 0:
                 $type = $parameter->getType();
-                if ($type instanceof \ReflectionNamedType) {
-                    return $this->get($type->getName());
+                if (($type instanceof \ReflectionNamedType) && $this->has($typeName = $type->getName())) {
+                    return $this->get($typeName);
+                }
+                if ($parameter->isDefaultValueAvailable()) {
+                    return $parameter->getDefaultValue();
                 }
                 break;
             case 1:
@@ -86,7 +89,6 @@ final class Container implements ContainerInterface
 
     /**
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
     public function get(string $id): mixed
     {
@@ -128,7 +130,7 @@ final class Container implements ContainerInterface
         try {
             $_ = $this->get($id);
             return true;
-        } catch (ContainerExceptionInterface | NotFoundExceptionInterface) {
+        } catch (ContainerExceptionInterface) {
             return false;
         }
     }

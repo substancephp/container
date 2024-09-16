@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace SubstancePHP\Container;
 
 use Psr\Container\ContainerInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 /**
  * Injects a function parameter value using the attribute's argument as the dependency id for looking up in

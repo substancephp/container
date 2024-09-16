@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.4.0
+
+* Allow autowiring mechanism to use default parameters
+
 ### v0.3.2
 
 * Fix autowiring

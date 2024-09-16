@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Test;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Container\ContainerInterface;
 use SubstancePHP\Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -67,17 +68,19 @@ class ContainerTest extends TestCase
             DummyService $param1,
             #[Inject('x')] string $param2,
             #[DummyCustomInject('hi')] string $param3,
-        ) => ['a' => $param1, 'b' => $param2, 'c' => $param3];
+            int $param4 = 6,
+        ) => ['a' => $param1, 'b' => $param2, 'c' => $param3, 'd' => $param4];
 
         $container = Container::from(self::makeSampleFactories());
         $result = $container->run($happyClosure);
 
         $this->assertIsArray($result);
-        $this->assertCount(3, $result);
+        $this->assertCount(4, $result);
         $this->assertInstanceOf(DummyService::class, $result['a']);
         $this->assertSame('Max', $result['a']->name);
         $this->assertSame('dummy value for x', $result['b']);
         $this->assertSame('hi|hi', $result['c']);
+        $this->assertSame(6, $result['d']);
     }
 
     public function testRunUnhappyPathMultipleInjectionAttributes(): void
@@ -123,6 +126,7 @@ class ContainerTest extends TestCase
 
         $b = $container->get(DummyServiceB::class);
         $this->assertInstanceOf(DummyServiceB::class, $b);
+        $this->assertSame('hello', $b->paramWithDefault);
 
         $b2 = $container->get(DummyServiceB::class);
         $this->assertSame($b2, $b);
