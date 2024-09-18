@@ -1,5 +1,13 @@
 # Changelog
 
+### v0.5.1
+
+* Improve autowire method:
+  * Ensure it only ever throws AutowireException, never dependency not
+    found exception
+  * Remove dead code
+  * Improve test coverage
+
 ### v0.5.0
 
 * Change the autowiring mechanism. It now only works if you opt into

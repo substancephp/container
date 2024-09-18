@@ -7,11 +7,16 @@ namespace Test;
 use Psr\Container\ContainerInterface;
 use SubstancePHP\Container\Container;
 use PHPUnit\Framework\TestCase;
+use SubstancePHP\Container\Exception\AutowireException;
 use SubstancePHP\Container\Exception\DependencyNotFoundException;
 use SubstancePHP\Container\Inject;
 use TestUtil\Fixtures\DummyCustomInject;
 use TestUtil\Fixtures\DummyService;
 use TestUtil\Fixtures\DummyServiceB;
+use TestUtil\Fixtures\DummyServiceC;
+use TestUtil\Fixtures\DummyServiceD;
+use TestUtil\Fixtures\DummyServiceE;
+use TestUtil\Fixtures\DummyServiceF;
 
 class ContainerTest extends TestCase
 {
@@ -104,6 +109,49 @@ class ContainerTest extends TestCase
         $this->expectException(DependencyNotFoundException::class);
         $container = Container::from(self::makeSampleFactories());
         $container->run($unhappyClosure);
+    }
+
+    public function testAutowireHappyPath(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+
+        $result = Container::autowire($container, DummyServiceC::class);
+        $this->assertInstanceOf(DummyServiceC::class, $result);
+    }
+
+    public function testAutowireCannotResolveConstructorParam(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->expectException(AutowireException::class);
+        Container::autowire($container, DummyService::class);
+    }
+
+    public function testAutowireNotClassName(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->expectException(AutowireException::class);
+        Container::autowire($container, 'dummy-name');
+    }
+
+    public function testAutowireConstructorProtected(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->expectException(AutowireException::class);
+        Container::autowire($container, DummyServiceD::class);
+    }
+
+    public function testAutowireConstructorPrivate(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->expectException(AutowireException::class);
+        Container::autowire($container, DummyServiceF::class);
+    }
+
+    public function testAutowireWhenClassIsAbstract(): void
+    {
+        $container = Container::from(self::makeSampleFactories());
+        $this->expectException(AutowireException::class);
+        Container::autowire($container, DummyServiceE::class);
     }
 
     public function testFromAndGet(): void

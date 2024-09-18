@@ -105,9 +105,6 @@ final class Container implements ContainerInterface
             throw new AutowireException("Not instantiable: $id");
         }
         $constructor = $reflectionClass->getConstructor();
-        if ($constructor !== null && ! $constructor->isPublic()) {
-            throw new AutowireException("Constructor not accessible: $id");
-        }
         if ($constructor === null) {
             try {
                 return $reflectionClass->newInstance();
@@ -116,10 +113,10 @@ final class Container implements ContainerInterface
             }
         }
         $parameters = $constructor->getParameters();
-        $arguments = \array_map($container->valueForParameter(...), $parameters);
         try {
+            $arguments = \array_map($container->valueForParameter(...), $parameters);
             return ($container->members[$id] = $reflectionClass->newInstanceArgs($arguments));
-        } catch (\ReflectionException $e) {
+        } catch (\ReflectionException | DependencyNotFoundException $e) {
             throw new AutowireException($e->getMessage(), $e->getCode(), $e);
         }
     }
