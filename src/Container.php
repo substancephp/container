@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SubstancePHP\Container;
 
+use SubstancePHP\Container\Exception\AutowireException;
 use SubstancePHP\Container\Exception\DependencyNotFoundException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -14,7 +15,7 @@ final class Container implements ContainerInterface
     private readonly ?ContainerInterface $parent;
 
     /**
-     * @var array<string, \Closure(ContainerInterface $c): mixed>
+     * @var array<string, \Closure(self $c, string $id): mixed>
      */
     private readonly array $factories;
 
@@ -24,7 +25,7 @@ final class Container implements ContainerInterface
     private array $members;
 
     /**
-     * @param array<string, \Closure(ContainerInterface $c): mixed> $factories
+     * @param array<string, \Closure(self $c, string $id): mixed> $factories
      */
     private function __construct(?ContainerInterface $parent, array $factories)
     {
@@ -33,20 +34,19 @@ final class Container implements ContainerInterface
         $this->members = [];
     }
 
-    /** @param array<string, \Closure(ContainerInterface $c): mixed> $factories */
+    /** @param array<string, \Closure(self $c, string $id): mixed> $factories */
     public static function from(array $factories): self
     {
         return new self(null, $factories);
     }
 
-    /** @param array<string, \Closure(ContainerInterface $c): mixed> $factories */
+    /** @param array<string, \Closure(self $c, string $id): mixed> $factories */
     public static function extend(ContainerInterface $parent, array $factories): self
     {
         return new self($parent, $factories);
     }
 
     /**
-     * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      * @throws \ReflectionException
      */
@@ -88,7 +88,45 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * This function can be referenced as a closure within factory definitions, to tell the {@see Container} to
+     * autowire this dependency. This should only be used where the dependency is of a class type with a public
+     * constructor for which all the parameters either have defaults, or can themselves be provided by this
+     * {@see Container}.
+     *
+     * @throws AutowireException
+     */
+    public static function autowire(self $container, string $id): mixed
+    {
+        if (! \class_exists($id)) {
+            throw new AutowireException("Not a class name: $id");
+        }
+        $reflectionClass = new \ReflectionClass($id);
+        if (! $reflectionClass->isInstantiable()) {
+            throw new AutowireException("Not instantiable: $id");
+        }
+        $constructor = $reflectionClass->getConstructor();
+        if ($constructor !== null && ! $constructor->isPublic()) {
+            throw new AutowireException("Constructor not accessible: $id");
+        }
+        if ($constructor === null) {
+            try {
+                return $reflectionClass->newInstance();
+            } catch (\ReflectionException $e) {
+                throw new AutowireException($e->getMessage(), $e->getCode(), $e);
+            }
+        }
+        $parameters = $constructor->getParameters();
+        $arguments = \array_map($container->valueForParameter(...), $parameters);
+        try {
+            return ($container->members[$id] = $reflectionClass->newInstanceArgs($arguments));
+        } catch (\ReflectionException $e) {
+            throw new AutowireException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
      * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function get(string $id): mixed
     {
@@ -97,41 +135,22 @@ final class Container implements ContainerInterface
         }
         if (\array_key_exists($id, $this->factories)) {
             $factory = $this->factories[$id];
-            return ($this->members[$id] = $factory($this));
+            return ($this->members[$id] = $factory($this, $id));
         }
-        if ($this->parent !== null && $this->parent->has($id)) {
-            return $this->parent->get($id);
+        if ($this->parent === null) {
+            throw new DependencyNotFoundException("Dependency `{$id}` not found");
         }
-        try {
-            if (! \class_exists($id)) {
-                throw new DependencyNotFoundException("Not a class name: $id");
-            }
-            $reflectionClass = new \ReflectionClass($id);
-            if (! $reflectionClass->isInstantiable()) {
-                throw new DependencyNotFoundException("Not instantiable: $id");
-            }
-            $constructor = $reflectionClass->getConstructor();
-            if ($constructor !== null && ! $constructor->isPublic()) {
-                throw new DependencyNotFoundException("Constructor not accessible: $id");
-            }
-            if ($constructor === null) {
-                return $reflectionClass->newInstance();
-            }
-            $parameters = $constructor->getParameters();
-            $arguments = \array_map($this->valueForParameter(...), $parameters);
-            return ($this->members[$id] = $reflectionClass->newInstanceArgs($arguments));
-        } catch (\ReflectionException $e) {
-            throw new DependencyNotFoundException($e->getMessage(), $e->getCode(), $e);
-        }
+        return $this->parent->get($id);
     }
 
     public function has(string $id): bool
     {
-        try {
-            $_ = $this->get($id);
+        if (\array_key_exists($id, $this->factories)) {
             return true;
-        } catch (ContainerExceptionInterface) {
+        }
+        if ($this->parent === null) {
             return false;
         }
+        return $this->parent->has($id);
     }
 }

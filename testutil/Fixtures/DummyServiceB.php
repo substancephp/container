@@ -2,11 +2,14 @@
 
 namespace TestUtil\Fixtures;
 
+use SubstancePHP\Container\Inject;
+
 readonly class DummyServiceB
 {
     public function __construct(
-        public readonly DummyService $dummyService,
-        public readonly string $paramWithDefault = 'hello',
+        public DummyService $dummyService,
+        #[Inject('abc.xyz')] public int $length,
+        public int $width = 50,
     ) {
     }
 }

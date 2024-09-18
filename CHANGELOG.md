@@ -1,5 +1,11 @@
 # Changelog
 
+### v0.5.0
+
+* Change the autowiring mechanism. It now only works if you opt into
+  autowiring for a specific class, using `Container::autowire(...)` as
+  the factory callback.
+
 ### v0.4.0
 
 * Allow autowiring mechanism to use default parameters

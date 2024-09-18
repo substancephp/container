@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Test;
 
-use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Container\ContainerInterface;
 use SubstancePHP\Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +33,7 @@ class ContainerTest extends TestCase
         };
     }
 
-    /** @return array<string, \Closure(ContainerInterface): mixed> */
+    /** @return array<string, \Closure(Container, string): mixed> */
     private static function makeSampleFactories(): array
     {
         return [
@@ -42,7 +41,9 @@ class ContainerTest extends TestCase
             'x' => fn () => 'dummy value for x',
             'y' => fn ($c) => 'dummy value for y, not ' . $c->get('x'),
             'dummy-name' => fn () => 'Max',
+            'abc.xyz' => fn () => 9,
             DummyService::class => fn ($c) => new DummyService($c->get('dummy-name')),
+            DummyServiceB::class => Container::autowire(...),
         ];
     }
 
@@ -68,19 +69,21 @@ class ContainerTest extends TestCase
             DummyService $param1,
             #[Inject('x')] string $param2,
             #[DummyCustomInject('hi')] string $param3,
-            int $param4 = 6,
-        ) => ['a' => $param1, 'b' => $param2, 'c' => $param3, 'd' => $param4];
+            DummyServiceB $param4,
+            int $param5 = 50,
+        ) => ['a' => $param1, 'b' => $param2, 'c' => $param3, 'd' => $param4, 'e' => $param5];
 
         $container = Container::from(self::makeSampleFactories());
         $result = $container->run($happyClosure);
 
         $this->assertIsArray($result);
-        $this->assertCount(4, $result);
+        $this->assertCount(5, $result);
         $this->assertInstanceOf(DummyService::class, $result['a']);
         $this->assertSame('Max', $result['a']->name);
         $this->assertSame('dummy value for x', $result['b']);
         $this->assertSame('hi|hi', $result['c']);
-        $this->assertSame(6, $result['d']);
+        $this->assertInstanceOf(DummyServiceB::class, $result['d']);
+        $this->assertEquals(50, $result['e']);
     }
 
     public function testRunUnhappyPathMultipleInjectionAttributes(): void
@@ -109,6 +112,7 @@ class ContainerTest extends TestCase
         $this->assertSame('child dummy value for W', $container->get('W'));
         $this->assertInstanceOf(DummyService::class, $container->get(DummyService::class));
         $this->assertSame('Max', $container->get(DummyService::class)->name);
+        $this->assertInstanceOf(DummyServiceB::class, $container->get(DummyServiceB::class));
 
         $a = $container->get(DummyService::class);
         $b = $container->get(DummyService::class);
@@ -117,29 +121,12 @@ class ContainerTest extends TestCase
         $container->get('xyz');
     }
 
-    public function testAutowiring(): void
-    {
-        $container = Container::from(self::makeSampleFactories());
-        $this->assertSame('child dummy value for W', $container->get('W'));
-        $this->assertInstanceOf(DummyService::class, $container->get(DummyService::class));
-        $this->assertSame('Max', $container->get(DummyService::class)->name);
-
-        $b = $container->get(DummyServiceB::class);
-        $this->assertInstanceOf(DummyServiceB::class, $b);
-        $this->assertSame('hello', $b->paramWithDefault);
-
-        $b2 = $container->get(DummyServiceB::class);
-        $this->assertSame($b2, $b);
-
-        $this->expectException(DependencyNotFoundException::class);
-        $_ = $container->get('No\\Such\\Class');
-    }
-
     public function testHas(): void
     {
         $container = Container::from(self::makeSampleFactories());
         $this->assertTrue($container->has('W'));
         $this->assertTrue($container->has(DummyService::class));
+        $this->assertTrue($container->has(DummyServiceB::class));
         $this->assertFalse($container->has('xyz'));
     }
 }
