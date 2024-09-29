@@ -88,6 +88,9 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * Create a new instance of the passed class, using the passed container instance to get any dependencies
+     * required to be passed to the class's constructor.
+     *
      * This function can be referenced as a closure within factory definitions, to tell the {@see Container} to
      * autowire this dependency. This should only be used where the dependency is of a class type with a public
      * constructor for which all the parameters either have defaults, or can themselves be provided by this
@@ -95,14 +98,14 @@ final class Container implements ContainerInterface
      *
      * @throws AutowireException
      */
-    public static function autowire(self $container, string $id): mixed
+    public static function autowire(self $container, string $class): mixed
     {
-        if (! \class_exists($id)) {
-            throw new AutowireException("Not a class name: $id");
+        if (! \class_exists($class)) {
+            throw new AutowireException("Not a class name: $class");
         }
-        $reflectionClass = new \ReflectionClass($id);
+        $reflectionClass = new \ReflectionClass($class);
         if (! $reflectionClass->isInstantiable()) {
-            throw new AutowireException("Not instantiable: $id");
+            throw new AutowireException("Not instantiable: $class");
         }
         $constructor = $reflectionClass->getConstructor();
         if ($constructor === null) {
@@ -115,7 +118,7 @@ final class Container implements ContainerInterface
         $parameters = $constructor->getParameters();
         try {
             $arguments = \array_map($container->valueForParameter(...), $parameters);
-            return ($container->members[$id] = $reflectionClass->newInstanceArgs($arguments));
+            return $reflectionClass->newInstanceArgs($arguments);
         } catch (\ReflectionException | DependencyNotFoundException $e) {
             throw new AutowireException($e->getMessage(), $e->getCode(), $e);
         }

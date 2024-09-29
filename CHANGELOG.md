@@ -1,5 +1,11 @@
 # Changelog
 
+### v0.6.0
+
+* Changes to autowire method
+  * Second parameter renamed from `$id` to `$class`, for clarify
+  * Remove redundant internal caching step
+
 ### v0.5.1
 
 * Improve autowire method:
