@@ -4,7 +4,7 @@
 
 ## Overview
 
-`substancephp/container` is a dependency injection package for PHP that offers three core features:
+`substancephp/container` is a dependency injection package for PHP. It offers:
 * A container class that implements the [PSR-11 container interface](https://www.php-fig.org/psr/psr-11/)
 * A container inheritance mechanism
 * Automatic parameter injection into closures, using either type hinting or attributes
@@ -18,37 +18,60 @@ composer require substancephp/container
 
 ## Usage
 
+The following is an illustrative code passage showing how to use the `SubstancePHP\Container` class to
+define dependencies for injection.
+
 ```php
 use Laminas\Diactoros\ServerRequestFactory;
 use Psr\Http\Message\ServerRequestInterface;
 use SubstancePHP\Container\Container;
 use SubstancePHP\Container\Inject;
 
+// Initialize a `Container` instance from an array. The keys are strings (typically, but not necessarily,
+// class names), and the values are callbacks telling the container how to construct that dependency.
 $container = Container::from([
-    Foo::class => fn () => new Foo(),
-    Bar::class => fn ($c) => new Bar($c->get(Foo::class)),
+
+    // Example of "manual" definition
+    Foo::class => fn () => new Foo('example', 'constructor', 'parameters'),
+    
+    // The callback optionally takes a parameter, referring to the Container instance itself.
+    // This can be used to get other dependencies to be used in the callback.
+    BarInterface::class => fn (Container $c) => new BarImplementation($c->get(Foo::class)),
+    
+    // The static `Container::autowire` method can be referenced to as a closure. It will arrange for the
+    // construction of the given dependency instance using reflection on its constructor parameters.
     Baz::class => Container::autowire(...),
+    
+    // Example of a simple literal value.
     'ttl-seconds' => fn () => 30,
 ]);
 
-$request = ServerRequestFactory::fromGlobals();
+// You can spawn a child container that inherits the parent container's definitions,
+// and augments/overrides them with additional definitions. This might be done, for example,
+// to initialize a separate `Container` instance per request.
+// Note that the *parent* container can be any instance of `Psr\Container\ContainerInterface`;
+// it need not be an instance of `SubstancePHP\Container\Container`.
+$container2 = Container::extend($container, [
+    ServerRequestInterface::class => fn () => ServerRequestFactory::fromGlobals(),
+]);
 
-// Spawn a child container that inherits the parent container's definitions,
-// and augments/overrides them with additional definitions:
-
-$container2 = Container::extend($container, [ServerRequestInterface::class => fn () => $request]);
-
-// Call a function, autowiring its parameters:
-
+// A `Container` can be invoked to run an arbitrary callable, autowiring its parameters with 
+// dependencies from the container:
 $container2->run(function(
+
+    // Parameters of named, non-scalar types will be injected based on the class/interface/enum name:
     Foo::class $foo,
-    #[Inject('ttl-seconds')] int $ttl,
     ServerRequestInterface $request,
+    
+    // The `SubstancePHP\Container\Inject` attribute allows specifying the dependency to
+    // be injected in the given parameter. This is useful especially when the parameter is
+    // of a scalar type:
+    #[Inject('ttl-seconds')] int $ttl,
 ): void {
     // ... do stuff
 });
 
-// If a class is autowired using Container::autowire(...), you can tell it use the Inject attribute
+// Similarly, if a class is autowired using Container::autowire(...), you can tell it use the Inject attribute
 // to specify dependencies for parameters that cannot be inferred automatically:
 
 public function __construct(
@@ -61,3 +84,11 @@ public function __construct(
 Note, after a given dependency has been looked up the first time, it is cached internally within the container,
 and the same instance will be returned again the next time. This behaviour is notably different to that of, say,
 Laravel's service container, which returns a new instance by default on each lookup.
+
+## Performance
+
+`substancephp/container` aims to offer a very simple, yet flexible API surface, while conforming with the
+PSR-11 container interface.
+
+It is not a goal of the library to have the highest possible runtime performance; but rather, to perform well
+enough for the vast majority of use cases&mdash;which I believe it does do.
