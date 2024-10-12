@@ -51,8 +51,14 @@ $container = Container::from([
     // Example of autowiring.  
     // By referencing the `Container::autowire` method as a closure, we can
     // arrange for the construction of the given dependency using reflection
-    // on its constructor parameters.
+    // on its constructor parameters:
     Baz::class => Container::autowire(...),
+
+    // The `Container::autowire` method can also be used within the callback
+    // itself:
+    BaqInterface::class => function (Container $c): BaqInterface {
+        return Container::autowire($c, BaqImplementation::class);
+    },
 ]);
 
 // You can spawn a child container that efficiently inherits the parent container's
