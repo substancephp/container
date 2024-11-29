@@ -47,8 +47,28 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * Executes the passed closure, autowiring its parameters with dependencies retrieved from
+     * the container.
+     *
+     * Parameters of named, non-scalar types will be injected based on the class/interface/enum
+     * name in the function signature of the closure.
+     *
+     * Alternatively, for any parameter including scalars, the {@see Inject} attribute can be used on
+     * a closure parameter to specify, by id, the dependency to be injected for that parameter.
+     *
+     * Example:
+     * <pre>
+     *     $container->run(function (
+     *         Foobar $foobar,
+     *         #[Inject('ttl-seconds')] int $ttlSeconds,
+     *     ): void {
+     *         // do stuff
+     *     });
+     * </pre>
+     *
      * @throws NotFoundExceptionInterface
      * @throws \ReflectionException
+     *
      */
     public function run(\Closure $closure): mixed
     {
@@ -88,7 +108,7 @@ final class Container implements ContainerInterface
     }
 
     /**
-     * Create a new instance of the passed class, using the passed container instance to get any dependencies
+     * Creates a new instance of the passed class, using the passed container instance to get any dependencies
      * required to be passed to the class's constructor.
      *
      * This function can be referenced as a closure within factory definitions, to tell the {@see Container} to
@@ -125,8 +145,13 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * Returns an instance of the requested dependency.
+     *
+     * Internally, the {@see Container} will construct an instance of the dependency only the first time one
+     * requested, and will return the same instance on any subsequent requests.
+     *
      * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
+     * @throws NotFoundExceptionInterface if the requested dependency is not defined by this {@see Container}.
      */
     public function get(string $id): mixed
     {
@@ -143,6 +168,10 @@ final class Container implements ContainerInterface
         return $this->parent->get($id);
     }
 
+    /**
+     * Returns true if the container contains (or can access via inheritance) a definition for this
+     * dependency; otherwise, returns false.
+     */
     public function has(string $id): bool
     {
         if (\array_key_exists($id, $this->factories)) {

@@ -7,8 +7,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
 /**
- * Designed for implementing by attribute classes that control how they determine values for dependency injection
- * during calls to {@see Container::run()}.
+ * Designed for implementing by attribute classes that control how they determine values for dependency injection.
+ *
+ * Implemented by {@see Inject}.
  */
 interface InjectionInterface
 {
