@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.6.1
+
+* Documentation improvements
+
 ### v0.6.0
 
 * Changes to autowire method
