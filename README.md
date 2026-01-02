@@ -19,7 +19,8 @@ composer require substancephp/container
 
 ## Usage
 
-The following is an illustrative code passage showing how to use the `SubstancePHP\Container` class to define dependencies for injection.
+The following is an illustrative code passage showing how to use the `SubstancePHP\Container` class to define
+dependencies for injection.
 
 ```php
 use Laminas\Diactoros\ServerRequestFactory;
@@ -108,11 +109,15 @@ public function __construct(
 
 Note, dependencies are always initialised lazily, when and only when the container is required to provide them.
 
-Also, after a given dependency has been looked up the first time, it is cached internally within the container, and the same instance will be returned again the next time. This behaviour is notably different to that of, say, Laravel's service container, which returns a new instance by default on each lookup.
+Also, after a given dependency has been looked up the first time, it is cached internally within the container, and
+the same instance will be returned again the next time. This behaviour is notably different to that of, say, Laravel's
+service container, which returns a new instance by default on each lookup.
 
 
 ## Performance
 
-`substancephp/container` aims to offer a very simple, yet flexible API surface, while conforming with the PSR-11 container interface.
+`substancephp/container` aims to offer a very simple, yet flexible API surface, while conforming with the PSR-11
+container interface.
 
-It is not a goal of the library to have the highest possible runtime performance; but rather, to perform well enough for the vast majority of use cases—which I believe it does do.
+It is not a goal of the library to have the highest possible runtime performance; but rather, to perform well enough
+for the vast majority of use cases.
